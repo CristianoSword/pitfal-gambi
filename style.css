@@ -64,9 +64,9 @@ canvas {
     image-rendering: crisp-edges;
 }
 
-/* Dedicated Mobile Touch Control Panel (Below Canvas) */
+/* Dedicated Mobile Touch Control Panel (Hidden on Desktop) */
 .touch-panel {
-    display: flex;
+    display: none;
     width: 100%;
     max-width: 640px;
     justify-content: space-between;
@@ -156,10 +156,10 @@ canvas {
 
 /* Footer Instructions */
 #game-footer {
-    margin-top: 4px;
+    margin-top: 8px;
     margin-bottom: 4px;
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     color: #8cb868;
     flex-shrink: 0;
 }
@@ -168,7 +168,7 @@ canvas {
     display: none;
 }
 
-/* Responsive adjustments for Mobile & Landscape */
+/* Responsive adjustments for Mobile & Touch Devices */
 @media (max-width: 768px), (pointer: coarse) {
     #game-wrapper {
         padding: 4px;
@@ -177,6 +177,10 @@ canvas {
     #canvas-container {
         max-height: 55vh;
         border-width: 3px;
+    }
+
+    .touch-panel {
+        display: flex;
     }
 
     .desktop-instructions {
