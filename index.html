@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pitfall! - Vanilla JS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-wrapper">
+        <div id="canvas-container">
+            <canvas id="gameCanvas" width="640" height="400"></canvas>
+            
+            <!-- Virtual Touch Controls for Mobile -->
+            <div id="touch-controls" class="touch-overlay">
+                <div class="dpad-container">
+                    <button class="touch-btn btn-up" id="btn-up">▲</button>
+                    <div class="dpad-middle">
+                        <button class="touch-btn btn-left" id="btn-left">◀</button>
+                        <button class="touch-btn btn-center"></button>
+                        <button class="touch-btn btn-right" id="btn-right">▶</button>
+                    </div>
+                    <button class="touch-btn btn-down" id="btn-down">▼</button>
+                </div>
+                
+                <div class="action-container">
+                    <button class="touch-btn btn-jump" id="btn-jump">PULAR</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-footer">
+            <p class="desktop-instructions">⌨️ <strong>Controles Teclado:</strong> Setas / WASD = Mover / Escada | Espaço / W / Seta Cima = Pular</p>
+            <p class="mobile-instructions">📱 <strong>Controles Mobile:</strong> Use o D-Pad e o botão PULAR na tela</p>
+        </div>
+    </div>
+
+    <script src="js/audio.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/hazards.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/screen.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
