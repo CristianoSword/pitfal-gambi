@@ -171,17 +171,45 @@ canvas {
 /* Responsive adjustments for Mobile & Touch Devices */
 @media (max-width: 768px), (pointer: coarse) {
     #game-wrapper {
-        justify-content: space-between;
-        padding: 4px;
+        justify-content: center;
+        gap: 12px;
+        padding: 10px 8px;
     }
 
     #canvas-container {
-        max-height: 52vh;
+        max-height: 48vh;
+        max-width: 96%;
+        margin-top: 10px;
         border-width: 3px;
     }
 
+    /* Compact Touch Control Panel */
     .touch-panel {
         display: flex;
+        max-width: 420px;
+        padding: 8px 16px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        border-radius: 12px;
+        border-width: 1.5px;
+    }
+
+    .touch-btn {
+        width: 46px;
+        height: 46px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+
+    .touch-btn.btn-center {
+        width: 46px;
+        height: 46px;
+    }
+
+    .btn-jump {
+        width: 68px;
+        height: 68px;
+        font-size: 13px;
     }
 
     .desktop-instructions {
@@ -190,6 +218,7 @@ canvas {
 
     .mobile-instructions {
         display: block;
+        font-size: 11px;
     }
 }
 
@@ -200,24 +229,41 @@ canvas {
         justify-content: center;
         align-items: center;
         padding: 4px 12px;
+        gap: 8px;
     }
 
     #canvas-container {
         max-height: 92vh;
         width: auto;
+        margin-top: 0;
         aspect-ratio: 16 / 10;
         flex-grow: 1;
     }
 
     .touch-panel {
         width: auto;
-        height: 90vh;
+        height: 85vh;
         flex-direction: column-reverse;
-        padding: 8px;
+        padding: 6px;
         background: transparent;
         border: none;
         box-shadow: none;
-        margin: 0 10px;
+        margin: 0 5px;
+    }
+
+    .touch-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .touch-btn.btn-center {
+        width: 44px;
+        height: 44px;
+    }
+
+    .btn-jump {
+        width: 64px;
+        height: 64px;
     }
 
     #game-footer {
