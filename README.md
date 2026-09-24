@@ -1,1 +1,1 @@
-https://cristianosword.github.io/pitfal-gambi/
+pitfal-gambi
