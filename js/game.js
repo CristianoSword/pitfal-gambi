@@ -155,19 +155,15 @@ class PitfallGame {
         this.ctx.fillRect(0, 0, 640, 40);
         this.ctx.fillRect(0, 360, 640, 40);
 
-        // PITFALL! Logo Text (Atari Style Pixel Gold Title)
+        // PITFAL GAMBI Logo Text
         this.ctx.fillStyle = '#ffd700';
-        this.ctx.font = 'bold 54px monospace';
+        this.ctx.font = 'bold 46px monospace';
         this.ctx.textAlign = 'center';
         this.ctx.shadowColor = '#000000';
         this.ctx.shadowBlur = 10;
-        this.ctx.fillText('PITFALL!', 320, 110);
+        this.ctx.fillText('PITFAL GAMBI', 320, 130);
 
-        // Subtitle
         this.ctx.shadowBlur = 0;
-        this.ctx.fillStyle = '#8db600';
-        this.ctx.font = 'bold 20px monospace';
-        this.ctx.fillText('ATIVISION CLONE - JS VANILLA', 320, 150);
 
         // High Score display
         this.ctx.fillStyle = '#ffffff';
