@@ -79,7 +79,7 @@ class InputHandler {
             if (!btn) return;
 
             const handleStart = (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 this.startPressed = true;
                 if (window.soundFx) window.soundFx.init();
                 btn.classList.add('active');
@@ -91,7 +91,7 @@ class InputHandler {
             };
 
             const handleEnd = (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 btn.classList.remove('active');
                 if (keyName === 'jump') {
                     this.keys.jump = false;
@@ -102,6 +102,7 @@ class InputHandler {
 
             btn.addEventListener('touchstart', handleStart, { passive: false });
             btn.addEventListener('touchend', handleEnd, { passive: false });
+            btn.addEventListener('touchcancel', handleEnd, { passive: false });
             btn.addEventListener('mousedown', handleStart);
             btn.addEventListener('mouseup', handleEnd);
             btn.addEventListener('mouseleave', handleEnd);

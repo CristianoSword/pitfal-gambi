@@ -5,47 +5,55 @@
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    touch-action: manipulation;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #0b0f07;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace, sans-serif;
 }
 
 body {
-    background-color: #111;
-    color: #fff;
-    font-family: 'Courier New', Courier, monospace, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    overflow: hidden;
-    background: radial-gradient(circle at center, #252b1b 0%, #0d0f0a 100%);
+    background: radial-gradient(circle at center, #1e2614 0%, #080c05 100%);
 }
 
 #game-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     width: 100vw;
-    max-width: 900px;
+    max-width: 960px;
     height: 100vh;
-    max-height: 700px;
-    padding: 10px;
+    height: 100dvh;
+    padding: 8px;
     position: relative;
 }
 
+/* Canvas Area (Clean, no overlapping controls) */
 #canvas-container {
     position: relative;
     width: 100%;
+    max-width: 800px;
     aspect-ratio: 16 / 10;
-    max-height: 80vh;
+    max-height: 62vh;
     background-color: #000;
     border: 4px solid #4a6b22;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(74, 107, 34, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(74, 107, 34, 0.4), inset 0 0 12px rgba(0, 0, 0, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 canvas {
@@ -56,100 +64,158 @@ canvas {
     image-rendering: crisp-edges;
 }
 
-/* Touch Controls Overlay */
-.touch-overlay {
-    position: absolute;
-    bottom: 10px;
-    left: 0;
-    width: 100%;
-    padding: 0 15px;
+/* Dedicated Mobile Touch Control Panel (Below Canvas) */
+.touch-panel {
     display: flex;
+    width: 100%;
+    max-width: 640px;
     justify-content: space-between;
-    align-items: flex-end;
-    pointer-events: none;
-    z-index: 10;
+    align-items: center;
+    padding: 12px 20px;
+    margin-top: auto;
+    margin-bottom: auto;
+    background: rgba(15, 22, 10, 0.85);
+    border: 2px solid rgba(74, 107, 34, 0.6);
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
 }
 
+/* D-PAD Cross Layout */
 .dpad-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    pointer-events: auto;
+    touch-action: none;
 }
 
 .dpad-middle {
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .action-container {
-    pointer-events: auto;
-    margin-bottom: 10px;
-}
-
-.touch-btn {
-    background: rgba(40, 50, 20, 0.7);
-    border: 2px solid rgba(150, 200, 80, 0.8);
-    color: #e2f0d9;
-    font-weight: bold;
-    font-size: 18px;
-    width: 52px;
-    height: 52px;
-    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    touch-action: manipulation;
+    touch-action: none;
+}
+
+.touch-btn {
+    background: linear-gradient(145deg, #2a3818, #18220c);
+    border: 2px solid #628c2c;
+    color: #e2f0d9;
+    font-weight: bold;
+    font-size: 20px;
+    width: 58px;
+    height: 58px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-    transition: background 0.1s, transform 0.05s;
+    touch-action: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.2);
+    transition: background 0.08s, transform 0.05s, border-color 0.08s;
 }
 
 .touch-btn:active, .touch-btn.active {
-    background: rgba(120, 180, 50, 0.9);
-    color: #111;
-    transform: scale(0.95);
+    background: linear-gradient(145deg, #578024, #395714);
+    border-color: #a2d65b;
+    color: #ffffff;
+    transform: scale(0.93);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.8), inset 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .touch-btn.btn-center {
+    width: 58px;
+    height: 58px;
     opacity: 0;
     pointer-events: none;
 }
 
+/* Jump Button */
 .btn-jump {
-    width: 80px;
-    height: 80px;
+    width: 88px;
+    height: 88px;
     border-radius: 50%;
-    background: rgba(180, 60, 40, 0.75);
-    border-color: rgba(240, 120, 100, 0.9);
-    font-size: 15px;
+    background: linear-gradient(145deg, #aa2c1d, #6e170d);
+    border: 3px solid #e05848;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 900;
     letter-spacing: 1px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.7), inset 0 2px 3px rgba(255,255,255,0.3);
 }
 
 .btn-jump:active, .btn-jump.active {
-    background: rgba(240, 80, 60, 0.95);
+    background: linear-gradient(145deg, #e04434, #941e12);
+    border-color: #ffa398;
+    transform: scale(0.92);
 }
 
 /* Footer Instructions */
 #game-footer {
-    margin-top: 8px;
+    margin-top: 4px;
+    margin-bottom: 4px;
     text-align: center;
-    font-size: 13px;
-    color: #a0b888;
+    font-size: 12px;
+    color: #8cb868;
+    flex-shrink: 0;
 }
 
 .mobile-instructions {
     display: none;
 }
 
+/* Responsive adjustments for Mobile & Landscape */
 @media (max-width: 768px), (pointer: coarse) {
-    .touch-overlay {
-        display: flex;
+    #game-wrapper {
+        padding: 4px;
     }
+
+    #canvas-container {
+        max-height: 55vh;
+        border-width: 3px;
+    }
+
     .desktop-instructions {
         display: none;
     }
+
     .mobile-instructions {
         display: block;
+    }
+}
+
+/* Landscape Mode for Smartphones */
+@media (max-height: 500px) and (orientation: landscape) {
+    #game-wrapper {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 4px 12px;
+    }
+
+    #canvas-container {
+        max-height: 92vh;
+        width: auto;
+        aspect-ratio: 16 / 10;
+        flex-grow: 1;
+    }
+
+    .touch-panel {
+        width: auto;
+        height: 90vh;
+        flex-direction: column-reverse;
+        padding: 8px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        margin: 0 10px;
+    }
+
+    #game-footer {
+        display: none;
     }
 }
