@@ -1,8 +1,8 @@
 // Pitfall Harry Player Class with Physics, Animation & Custom Gambi 7-Frame Sprite Sheet
 class Player {
     constructor() {
-        this.width = 24;
-        this.height = 36;
+        this.width = 28;
+        this.height = 48;
         
         // Sprite sheet setup (7 frames total)
         this.spriteSheet = new Image();
@@ -11,7 +11,7 @@ class Player {
         this.reset();
     }
 
-    reset(x = 80, y = 194) {
+    reset(x = 80, y = 182) {
         this.x = x;
         this.y = y; // Y coordinate is top-left of player bounding box
         this.vx = 0;
@@ -29,9 +29,9 @@ class Player {
         this.animFrame = 0;
         this.animTimer = 0;
 
-        // Constants adjusted for character height (36px)
-        this.GROUND_Y = 194; // Ground level Y (230 - 36 height)
-        this.UNDERGROUND_Y = 324; // Underground floor Y (360 - 36 height)
+        // Constants adjusted for enlarged character height (48px)
+        this.GROUND_Y = 182; // Ground level Y (230 - 48 height)
+        this.UNDERGROUND_Y = 312; // Underground floor Y (360 - 48 height)
         this.SPEED = 3.2;
         this.JUMP_FORCE = -7.8;
         this.GRAVITY = 0.45;
@@ -186,7 +186,7 @@ class Player {
             } else if (hazardManager.pitType === 'QUICKSAND' || hazardManager.pitType === 'TAR') {
                 this.isSinking = true;
                 this.y += 0.5;
-                if (this.y > 230) {
+                if (this.y > 220) {
                     this.triggerDeath(game);
                 }
             }
@@ -280,11 +280,7 @@ class Player {
         }
 
         // Select sprite frame index from 7-frame player_sheet.png
-        // Frame 0: IDLE
-        // Frame 1, 2: RUNNING
-        // Frame 3: JUMP / SWING
-        // Frame 4, 5: CLIMBING
-        // Frame 6: HURT
+        // 0: IDLE, 1..2: RUNNING, 3: JUMP/SWING, 4..5: CLIMB, 6: HURT
         let frameIdx = 0;
 
         if (this.isDying) {
@@ -298,12 +294,16 @@ class Player {
             frameIdx = runFrames[Math.floor(this.animTimer) % 2]; // RUN 1 & 2
         }
 
-        const drawW = 34;
-        const drawH = 42;
+        // Increased size by +40% (drawW = 50px, drawH = 60px)
+        const drawW = 50;
+        const drawH = 60;
         const drawX = Math.floor(this.x - (drawW - this.width) / 2);
         const drawY = Math.floor(this.y - (drawH - this.height));
 
         if (this.spriteSheet.complete && this.spriteSheet.naturalWidth > 0) {
+            // Keep pixel-art crispness at original resolution
+            ctx.imageSmoothingEnabled = false;
+
             const totalWidth = this.spriteSheet.naturalWidth;
             const totalHeight = this.spriteSheet.naturalHeight;
             const sw = totalWidth / 7;
