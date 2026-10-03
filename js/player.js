@@ -1,14 +1,12 @@
-// Pitfall Harry Player Class with Physics, Animation & Custom Gambi Sprite Sheet
+// Pitfall Harry Player Class with Physics, Animation & Custom Gambi 7-Frame Sprite Sheet
 class Player {
     constructor() {
         this.width = 24;
         this.height = 36;
         
-        // Sprite sheet setup
+        // Sprite sheet setup (7 frames total)
         this.spriteSheet = new Image();
         this.spriteSheet.src = 'graphics/player_sheet.png';
-        this.frameWidth = 190;
-        this.frameHeight = 223;
 
         this.reset();
     }
@@ -273,7 +271,6 @@ class Player {
         ctx.save();
 
         if (this.isDying) {
-            // Flash on death
             if (this.deathTimer % 6 < 3) {
                 ctx.fillStyle = '#ff0000';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -282,19 +279,23 @@ class Player {
             }
         }
 
-        // Select sprite frame index from player_sheet.png
-        // 0: IDLE, 1..3: RUNNING, 4: JUMP/SWING, 5..6: CLIMB, 7: HURT
+        // Select sprite frame index from 7-frame player_sheet.png
+        // Frame 0: IDLE
+        // Frame 1, 2: RUNNING
+        // Frame 3: JUMP / SWING
+        // Frame 4, 5: CLIMBING
+        // Frame 6: HURT
         let frameIdx = 0;
 
         if (this.isDying) {
-            frameIdx = 7; // HURT
+            frameIdx = 6; // HURT
         } else if (this.isClimbing) {
-            frameIdx = (Math.floor(this.animTimer) % 2 === 0) ? 5 : 6;
+            frameIdx = (Math.floor(this.animTimer) % 2 === 0) ? 4 : 5; // CLIMB 1 & 2
         } else if (this.isSwinging || !this.isGround) {
-            frameIdx = 4; // JUMP
+            frameIdx = 3; // JUMP / SWING
         } else if (this.vx !== 0) {
-            const runFrames = [1, 2, 3, 2];
-            frameIdx = runFrames[Math.floor(this.animTimer) % 4];
+            const runFrames = [1, 2];
+            frameIdx = runFrames[Math.floor(this.animTimer) % 2]; // RUN 1 & 2
         }
 
         const drawW = 34;
@@ -303,23 +304,28 @@ class Player {
         const drawY = Math.floor(this.y - (drawH - this.height));
 
         if (this.spriteSheet.complete && this.spriteSheet.naturalWidth > 0) {
+            const totalWidth = this.spriteSheet.naturalWidth;
+            const totalHeight = this.spriteSheet.naturalHeight;
+            const sw = totalWidth / 7;
+            const sh = totalHeight;
+            const sx = frameIdx * sw;
+
             if (this.facing === 'LEFT') {
                 ctx.translate(drawX + drawW, drawY);
                 ctx.scale(-1, 1);
                 ctx.drawImage(
                     this.spriteSheet,
-                    frameIdx * this.frameWidth, 0, this.frameWidth, this.frameHeight,
+                    sx, 0, sw, sh,
                     0, 0, drawW, drawH
                 );
             } else {
                 ctx.drawImage(
                     this.spriteSheet,
-                    frameIdx * this.frameWidth, 0, this.frameWidth, this.frameHeight,
+                    sx, 0, sw, sh,
                     drawX, drawY, drawW, drawH
                 );
             }
         } else {
-            // Fallback rectangle if image loading
             ctx.fillStyle = '#228b22';
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }

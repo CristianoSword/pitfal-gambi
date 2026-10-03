@@ -209,14 +209,22 @@ class PitfallGame {
         // Screen Number
         this.ctx.fillText(`TELA: ${this.screenMgr.currentScreenIndex + 1}/${this.screenMgr.totalScreens}`, 530, 30);
 
-        // Player Lives Icons (Harry / Gambi Hero Miniatures)
+        // Player Lives Icons (Miniature Player Idle Sprite from player_sheet.png)
         for (let i = 0; i < this.lives; i++) {
-            const lx = 20 + i * 22;
-            const ly = 372;
-            this.ctx.fillStyle = '#228b22';
-            this.ctx.fillRect(lx, ly, 12, 14);
-            this.ctx.fillStyle = '#ffcc99';
-            this.ctx.fillRect(lx + 2, ly - 4, 8, 4);
+            const lx = 20 + i * 24;
+            const ly = 368;
+            if (this.player.spriteSheet.complete && this.player.spriteSheet.naturalWidth > 0) {
+                const sw = this.player.spriteSheet.naturalWidth / 7;
+                const sh = this.player.spriteSheet.naturalHeight;
+                this.ctx.drawImage(
+                    this.player.spriteSheet,
+                    0, 0, sw, sh,
+                    lx, ly, 18, 22
+                );
+            } else {
+                this.ctx.fillStyle = '#228b22';
+                this.ctx.fillRect(lx, ly + 6, 12, 14);
+            }
         }
     }
 
