@@ -1,12 +1,19 @@
-// Pitfall Harry Player Class with Physics, Animation & Collision
+// Pitfall Harry Player Class with Physics, Animation & Custom Gambi Sprite Sheet
 class Player {
     constructor() {
-        this.width = 18;
-        this.height = 25;
+        this.width = 24;
+        this.height = 36;
+        
+        // Sprite sheet setup
+        this.spriteSheet = new Image();
+        this.spriteSheet.src = 'graphics/player_sheet.png';
+        this.frameWidth = 190;
+        this.frameHeight = 223;
+
         this.reset();
     }
 
-    reset(x = 80, y = 205) {
+    reset(x = 80, y = 194) {
         this.x = x;
         this.y = y; // Y coordinate is top-left of player bounding box
         this.vx = 0;
@@ -24,11 +31,11 @@ class Player {
         this.animFrame = 0;
         this.animTimer = 0;
 
-        // Constants
-        this.GROUND_Y = 205; // Ground level Y (230 - 25 height)
-        this.UNDERGROUND_Y = 335; // Underground floor Y (360 - 25 height)
-        this.SPEED = 3.0;
-        this.JUMP_FORCE = -7.5;
+        // Constants adjusted for character height (36px)
+        this.GROUND_Y = 194; // Ground level Y (230 - 36 height)
+        this.UNDERGROUND_Y = 324; // Underground floor Y (360 - 36 height)
+        this.SPEED = 3.2;
+        this.JUMP_FORCE = -7.8;
         this.GRAVITY = 0.45;
     }
 
@@ -55,7 +62,6 @@ class Player {
             // Release Vine on Jump or Up
             if (input.keys.jump) {
                 this.isSwinging = false;
-                // Give player velocity based on vine swing angleVel & direction
                 const vAngle = hazardManager.vine.angle;
                 const vVel = hazardManager.vine.angleVel;
                 this.vx = Math.cos(vAngle) * vVel * 120 + (input.keys.right ? 2 : (input.keys.left ? -2 : 0));
@@ -66,7 +72,7 @@ class Player {
         }
 
         // 2. Ladder Climbing Logic
-        const onLadderZone = (this.x > 285 && this.x < 325 && hazardManager.hasLadder);
+        const onLadderZone = (this.x > 280 && this.x < 330 && hazardManager.hasLadder);
 
         if (this.isClimbing) {
             this.vx = 0;
@@ -74,10 +80,10 @@ class Player {
 
             if (input.keys.up) {
                 this.y -= 2;
-                this.animFrame = (this.animFrame + 0.1) % 2;
+                this.animTimer += 0.15;
             } else if (input.keys.down) {
                 this.y += 2;
-                this.animFrame = (this.animFrame + 0.1) % 2;
+                this.animTimer += 0.15;
             }
 
             // Exit climbing at top or bottom
@@ -125,7 +131,6 @@ class Player {
 
         // 6. Underground Brick Wall Blocking
         if (this.isUnderground && hazardManager.undergroundWall) {
-            // Wall is located at X: 280 to 320
             if (this.x + this.width > 280 && this.x < 320) {
                 if (this.vx > 0) this.x = 280 - this.width;
                 if (this.vx < 0) this.x = 320;
@@ -136,9 +141,9 @@ class Player {
         if (hazardManager.vine.active && !this.isSwinging && this.vy >= 0 && this.y < 230) {
             const tip = hazardManager.getVineTipPos();
             const dx = (this.x + this.width / 2) - tip.x;
-            const dy = (this.y + 10) - tip.y;
+            const dy = (this.y + 15) - tip.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 22) {
+            if (dist < 24) {
                 this.isSwinging = true;
                 this.vy = 0;
                 this.vx = 0;
@@ -153,7 +158,6 @@ class Player {
 
         if (inPitZone && this.y >= this.GROUND_Y && !this.isSwinging) {
             if (hazardManager.pitType === 'WATER') {
-                // Check Crocodiles landing!
                 let landedOnCroc = false;
                 let hitCrocMouth = false;
 
@@ -179,18 +183,16 @@ class Player {
                     this.vy = 0;
                     this.isGround = true;
                 } else {
-                    // Fell into water!
                     this.triggerDeath(game);
                 }
             } else if (hazardManager.pitType === 'QUICKSAND' || hazardManager.pitType === 'TAR') {
                 this.isSinking = true;
                 this.y += 0.5;
-                if (this.y > 240) {
+                if (this.y > 230) {
                     this.triggerDeath(game);
                 }
             }
         } else {
-            // Normal Ground Collision
             if (this.y >= currentTargetY) {
                 this.y = currentTargetY;
                 this.vy = 0;
@@ -198,20 +200,19 @@ class Player {
             }
         }
 
-        // 9. Log Collision (Upper level)
+        // 9. Log Collision
         if (!this.isUnderground && !this.isSwinging) {
             hazardManager.logs.forEach(log => {
                 if (this.checkRectOverlap(this, log)) {
-                    this.tripTimer = 20; // Stun / trip player briefly
+                    this.tripTimer = 20;
                     game.subScore(100);
                     if (window.soundFx) window.soundFx.playLogHit();
-                    // Bounce back slightly
-                    this.x += (this.facing === 'RIGHT') ? -10 : 10;
+                    this.x += (this.facing === 'RIGHT') ? -12 : 12;
                 }
             });
         }
 
-        // 10. Snake / Fire / Scorpion Collision (Fatal Hazards)
+        // 10. Snake / Fire / Scorpion Collision
         if (!this.isUnderground && hazardManager.snake.active) {
             if (this.checkRectOverlap(this, hazardManager.snake)) {
                 this.triggerDeath(game);
@@ -231,7 +232,7 @@ class Player {
         // 11. Treasure Collision
         if (hazardManager.treasure && !hazardManager.treasure.collected) {
             const t = hazardManager.treasure;
-            const sameLevel = (this.isUnderground && hazardManager.screens ? true : (!this.isUnderground === (t.y < 300)));
+            const sameLevel = (this.isUnderground ? (t.y > 300) : (t.y < 300));
             if (sameLevel && this.checkRectOverlap(this, t)) {
                 t.collected = true;
                 game.addScore(t.points);
@@ -239,7 +240,7 @@ class Player {
             }
         }
 
-        // 12. Screen Transition Edge Detection (Left / Right boundaries)
+        // 12. Screen Transition Edge Detection
         if (this.x < -this.width + 5) {
             game.changeScreen(this.isUnderground ? 'UNDERGROUND_PREV' : 'PREV');
             this.x = 640 - this.width - 5;
@@ -248,12 +249,9 @@ class Player {
             this.x = 5;
         }
 
-        // Animation counter
+        // Animation Timer
         if (this.vx !== 0 && this.isGround) {
-            this.animTimer += 0.2;
-            this.animFrame = Math.floor(this.animTimer) % 4;
-        } else if (this.isGround) {
-            this.animFrame = 0;
+            this.animTimer += 0.22;
         }
     }
 
@@ -275,65 +273,55 @@ class Player {
         ctx.save();
 
         if (this.isDying) {
-            // Flash red on death
-            ctx.fillStyle = (this.deathTimer % 6 < 3) ? '#ff0000' : '#ffffff';
+            // Flash on death
+            if (this.deathTimer % 6 < 3) {
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.restore();
+                return;
+            }
+        }
+
+        // Select sprite frame index from player_sheet.png
+        // 0: IDLE, 1..3: RUNNING, 4: JUMP/SWING, 5..6: CLIMB, 7: HURT
+        let frameIdx = 0;
+
+        if (this.isDying) {
+            frameIdx = 7; // HURT
+        } else if (this.isClimbing) {
+            frameIdx = (Math.floor(this.animTimer) % 2 === 0) ? 5 : 6;
+        } else if (this.isSwinging || !this.isGround) {
+            frameIdx = 4; // JUMP
+        } else if (this.vx !== 0) {
+            const runFrames = [1, 2, 3, 2];
+            frameIdx = runFrames[Math.floor(this.animTimer) % 4];
+        }
+
+        const drawW = 34;
+        const drawH = 42;
+        const drawX = Math.floor(this.x - (drawW - this.width) / 2);
+        const drawY = Math.floor(this.y - (drawH - this.height));
+
+        if (this.spriteSheet.complete && this.spriteSheet.naturalWidth > 0) {
+            if (this.facing === 'LEFT') {
+                ctx.translate(drawX + drawW, drawY);
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    this.spriteSheet,
+                    frameIdx * this.frameWidth, 0, this.frameWidth, this.frameHeight,
+                    0, 0, drawW, drawH
+                );
+            } else {
+                ctx.drawImage(
+                    this.spriteSheet,
+                    frameIdx * this.frameWidth, 0, this.frameWidth, this.frameHeight,
+                    drawX, drawY, drawW, drawH
+                );
+            }
+        } else {
+            // Fallback rectangle if image loading
+            ctx.fillStyle = '#228b22';
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.restore();
-            return;
-        }
-
-        // Draw Pitfall Harry Sprite (Pixel art style)
-        // Green shirt, brown pants, skin tone head/arms, yellow hat
-        const x = Math.floor(this.x);
-        const y = Math.floor(this.y);
-
-        // Hat (Yellow/Tan Atari Pitfall Hat)
-        ctx.fillStyle = '#d4af37';
-        ctx.fillRect(x + 2, y, 14, 4);
-        ctx.fillRect(x + (this.facing === 'RIGHT' ? 4 : 0), y + 3, 14, 2);
-
-        // Head (Skin tone)
-        ctx.fillStyle = '#ffcc99';
-        ctx.fillRect(x + 4, y + 4, 10, 6);
-
-        // Eyes / Hair
-        ctx.fillStyle = '#5c3a21';
-        ctx.fillRect(x + (this.facing === 'RIGHT' ? 10 : 4), y + 5, 3, 2);
-
-        // Shirt (Green Jungle Vest)
-        ctx.fillStyle = '#228b22';
-        ctx.fillRect(x + 3, y + 10, 12, 8);
-
-        // Arms
-        ctx.fillStyle = '#ffcc99';
-        if (this.isSwinging || this.isClimbing) {
-            // Arms raised up
-            ctx.fillRect(x, y + 4, 4, 8);
-            ctx.fillRect(x + 14, y + 4, 4, 8);
-        } else {
-            ctx.fillRect(this.facing === 'RIGHT' ? x + 13 : x + 1, y + 10, 4, 6);
-        }
-
-        // Pants (Brown)
-        ctx.fillStyle = '#8b4513';
-        ctx.fillRect(x + 3, y + 18, 12, 4);
-
-        // Legs & Running Animation Frames
-        ctx.fillStyle = '#5c2e0b';
-        if (!this.isGround && !this.isClimbing && !this.isSwinging) {
-            // Jump pose (Legs tucked)
-            ctx.fillRect(x + 2, y + 20, 5, 5);
-            ctx.fillRect(x + 11, y + 20, 5, 5);
-        } else if (this.animFrame === 1) {
-            ctx.fillRect(x, y + 21, 5, 4);
-            ctx.fillRect(x + 13, y + 21, 5, 4);
-        } else if (this.animFrame === 3) {
-            ctx.fillRect(x + 2, y + 21, 6, 4);
-            ctx.fillRect(x + 10, y + 21, 6, 4);
-        } else {
-            // Standing pose
-            ctx.fillRect(x + 3, y + 21, 4, 4);
-            ctx.fillRect(x + 11, y + 21, 4, 4);
         }
 
         ctx.restore();

@@ -18,6 +18,10 @@ class PitfallGame {
         this.lastTime = 0;
         this.flashTimer = 0;
 
+        // Custom Title Art Image
+        this.titleImg = new Image();
+        this.titleImg.src = 'graphics/title_banner.png';
+
         this.init();
     }
 
@@ -36,7 +40,7 @@ class PitfallGame {
         this.screenMgr.currentScreenIndex = 0;
         this.screenMgr.generateScreens();
         this.loadCurrentScreen();
-        this.player.reset(80, 205);
+        this.player.reset(80, 194);
         this.gameState = 'PLAYING';
 
         if (window.soundFx) window.soundFx.playStart();
@@ -78,7 +82,7 @@ class PitfallGame {
             this.gameState = 'GAME_OVER';
         } else {
             // Respawn player at top level start of screen
-            this.player.reset(80, 205);
+            this.player.reset(80, 194);
         }
     }
 
@@ -147,40 +151,46 @@ class PitfallGame {
 
     drawTitleScreen() {
         // Dark Jungle Background
-        this.ctx.fillStyle = '#0f2409';
+        this.ctx.fillStyle = '#0b1807';
         this.ctx.fillRect(0, 0, 640, 400);
 
-        // Canopy Border
+        // Canopy Border Top & Bottom
         this.ctx.fillStyle = '#2d6a1b';
-        this.ctx.fillRect(0, 0, 640, 40);
-        this.ctx.fillRect(0, 360, 640, 40);
+        this.ctx.fillRect(0, 0, 640, 25);
+        this.ctx.fillRect(0, 375, 640, 25);
 
-        // PITFAL GAMBI Logo Text
+        // PITFAL GAMBI Header
         this.ctx.fillStyle = '#ffd700';
-        this.ctx.font = 'bold 46px monospace';
+        this.ctx.font = 'bold 36px monospace';
         this.ctx.textAlign = 'center';
         this.ctx.shadowColor = '#000000';
-        this.ctx.shadowBlur = 10;
-        this.ctx.fillText('PITFAL GAMBI', 320, 130);
-
+        this.ctx.shadowBlur = 8;
+        this.ctx.fillText('PITFAL GAMBI', 320, 52);
         this.ctx.shadowBlur = 0;
+
+        // Custom Title Artwork (GAMBIARRAS hero emblem)
+        if (this.titleImg.complete && this.titleImg.naturalWidth > 0) {
+            const artW = 270;
+            const artH = 235;
+            this.ctx.drawImage(this.titleImg, 320 - artW / 2, 60, artW, artH);
+        }
 
         // High Score display
         this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = '16px monospace';
-        this.ctx.fillText(`RECORD HIGHSCORE: ${this.highScore}`, 320, 200);
+        this.ctx.font = '14px monospace';
+        this.ctx.fillText(`RECORD HIGHSCORE: ${this.highScore}`, 320, 310);
 
         // Press Start Flashing Text
         if (Math.sin(this.flashTimer * 3) > 0) {
             this.ctx.fillStyle = '#00ffff';
-            this.ctx.font = 'bold 24px monospace';
-            this.ctx.fillText('PRESS START / TOQUE NA TELA', 320, 260);
+            this.ctx.font = 'bold 20px monospace';
+            this.ctx.fillText('PRESS START / TOQUE NA TELA', 320, 340);
         }
 
         // Instructions Footer
         this.ctx.fillStyle = '#a0b888';
-        this.ctx.font = '14px monospace';
-        this.ctx.fillText('PC: Setas / WASD + Espaço  |  Mobile: Controles Touch', 320, 320);
+        this.ctx.font = '12px monospace';
+        this.ctx.fillText('PC: Setas / WASD + Espaço  |  Mobile: Controles Touch', 320, 365);
     }
 
     drawHUD() {
@@ -203,7 +213,7 @@ class PitfallGame {
         // Screen Number
         this.ctx.fillText(`TELA: ${this.screenMgr.currentScreenIndex + 1}/${this.screenMgr.totalScreens}`, 530, 30);
 
-        // Player Lives Icons (Harry Miniatures)
+        // Player Lives Icons (Harry / Gambi Hero Miniatures)
         for (let i = 0; i < this.lives; i++) {
             const lx = 20 + i * 22;
             const ly = 372;

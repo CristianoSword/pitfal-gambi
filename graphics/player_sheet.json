@@ -1,0 +1,15 @@
+{
+  "frameWidth": 187,
+  "frameHeight": 220,
+  "frameCount": 8,
+  "frames": {
+    "idle": 0,
+    "run1": 1,
+    "run2": 2,
+    "run3": 3,
+    "jump": 4,
+    "climb1": 5,
+    "climb2": 6,
+    "hurt": 7
+  }
+}
