@@ -9,7 +9,7 @@ class ScreenManager {
 
     generateScreens() {
         const pitTypes = ['NONE', 'WATER', 'QUICKSAND', 'TAR', 'NONE', 'WATER', 'NONE'];
-        const treasureTypes = [null, 'SILVER', 'GOLD', null, 'MONEY', 'RING', null];
+        const treasureTypes = [null, 'ITEM_0', 'ITEM_1', 'ITEM_2', null, 'ITEM_3', 'ITEM_4', 'ITEM_5', null];
 
         for (let i = 0; i < this.totalScreens; i++) {
             const pitType = pitTypes[i % pitTypes.length];

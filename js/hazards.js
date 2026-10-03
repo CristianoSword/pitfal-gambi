@@ -1,6 +1,8 @@
 // Hazards, Vine, Crocodiles, Logs, Scorpions and Treasures
 class HazardManager {
     constructor() {
+        this.premiosSheet = new Image();
+        this.premiosSheet.src = 'graphics/premios.png';
         this.reset();
     }
 
@@ -93,22 +95,34 @@ class HazardManager {
             this.scorpion.x = 250;
         }
 
-        // Setup Treasure
+        // Setup Treasure (graphics/premios.png)
         if (screenConfig.treasureType && !screenConfig.treasureCollected) {
+            let itemIndex = 0;
             let points = 2000;
-            let color = '#C0C0C0';
-            if (screenConfig.treasureType === 'GOLD') { points = 3000; color = '#FFD700'; }
-            if (screenConfig.treasureType === 'MONEY') { points = 4000; color = '#85bb65'; }
-            if (screenConfig.treasureType === 'RING') { points = 5000; color = '#00FFFF'; }
+
+            switch (screenConfig.treasureType) {
+                case 'ITEM_0': itemIndex = 0; points = 1000; break;
+                case 'ITEM_1': itemIndex = 1; points = 2000; break;
+                case 'ITEM_2': itemIndex = 2; points = 3000; break;
+                case 'ITEM_3': itemIndex = 3; points = 4000; break;
+                case 'ITEM_4': itemIndex = 4; points = 5000; break;
+                case 'ITEM_5': itemIndex = 5; points = 10000; break;
+                default:
+                    if (screenConfig.treasureType === 'SILVER') itemIndex = 0;
+                    if (screenConfig.treasureType === 'GOLD') itemIndex = 1;
+                    if (screenConfig.treasureType === 'MONEY') itemIndex = 2;
+                    if (screenConfig.treasureType === 'RING') itemIndex = 3;
+                    break;
+            }
 
             this.treasure = {
                 type: screenConfig.treasureType,
+                itemIndex: itemIndex,
                 x: screenConfig.treasureX || 520,
-                y: screenConfig.treasureUnderground ? 340 : 210,
-                width: 18,
-                height: 16,
+                y: screenConfig.treasureUnderground ? 332 : 204,
+                width: 26,
+                height: 26,
                 points: points,
-                color: color,
                 collected: false
             };
         }
@@ -319,28 +333,27 @@ class HazardManager {
             }
         }
 
-        // 9. Draw Treasure
+        // 9. Draw Treasure (graphics/premios.png)
         if (this.treasure && !this.treasure.collected) {
             const t = this.treasure;
-            ctx.fillStyle = t.color;
-            if (t.type === 'RING') {
-                ctx.beginPath();
-                ctx.arc(t.x + 8, t.y + 8, 7, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#000000';
-                ctx.beginPath();
-                ctx.arc(t.x + 8, t.y + 8, 4, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (t.type === 'MONEY') {
-                ctx.fillRect(t.x + 2, t.y + 4, 14, 12);
-                ctx.fillRect(t.x + 5, t.y, 8, 4);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '9px monospace';
-                ctx.fillText('$', t.x + 6, t.y + 13);
-            } else { // GOLD / SILVER BARS
-                ctx.fillRect(t.x, t.y + 4, t.width, t.height - 4);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(t.x + 2, t.y + 6, t.width - 4, 2);
+            if (this.premiosSheet.complete && this.premiosSheet.naturalWidth > 0) {
+                ctx.save();
+                ctx.imageSmoothingEnabled = false; // pixel-art crispness
+                const totalW = this.premiosSheet.naturalWidth;
+                const totalH = this.premiosSheet.naturalHeight;
+                const sw = totalW / 6;
+                const sh = totalH;
+                const sx = t.itemIndex * sw;
+
+                ctx.drawImage(
+                    this.premiosSheet,
+                    sx, 0, sw, sh,
+                    t.x, t.y, t.width, t.height
+                );
+                ctx.restore();
+            } else {
+                ctx.fillStyle = '#ffd700';
+                ctx.fillRect(t.x, t.y, t.width, t.height);
             }
         }
     }
