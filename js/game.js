@@ -150,53 +150,43 @@ class PitfallGame {
     }
 
     drawTitleScreen() {
-        // Dark Jungle Background
-        this.ctx.fillStyle = '#0b1807';
-        this.ctx.fillRect(0, 0, 640, 400);
-
-        // Canopy Border Top & Bottom
-        this.ctx.fillStyle = '#2d6a1b';
-        this.ctx.fillRect(0, 0, 640, 25);
-        this.ctx.fillRect(0, 375, 640, 25);
-
-        // PITFAL GAMBI Header
-        this.ctx.fillStyle = '#ffd700';
-        this.ctx.font = 'bold 36px monospace';
-        this.ctx.textAlign = 'center';
-        this.ctx.shadowColor = '#000000';
-        this.ctx.shadowBlur = 8;
-        this.ctx.fillText('PITFAL GAMBI', 320, 52);
-        this.ctx.shadowBlur = 0;
-
-        // Custom Title Artwork (tela titulo.jpg)
+        // Draw Original High Quality Title JPG Image filling the screen
         if (this.titleImg.complete && this.titleImg.naturalWidth > 0) {
-            const artW = 290;
-            const artH = 218;
-            const artX = 320 - artW / 2;
-            const artY = 65;
-            
-            // Neat card border
-            this.ctx.fillStyle = '#4a6b22';
-            this.ctx.fillRect(artX - 4, artY - 4, artW + 8, artH + 8);
-            this.ctx.drawImage(this.titleImg, artX, artY, artW, artH);
+            this.ctx.save();
+            this.ctx.imageSmoothingEnabled = true;
+            this.ctx.imageSmoothingQuality = 'high';
+            // Draw image filling canvas (640x400)
+            this.ctx.drawImage(this.titleImg, 0, 0, 640, 400);
+            this.ctx.restore();
+        } else {
+            // Dark Jungle Background fallback
+            this.ctx.fillStyle = '#0b1807';
+            this.ctx.fillRect(0, 0, 640, 400);
         }
 
-        // High Score display
+        // Overlay Title Header Text if desired with dropshadow
+        this.ctx.shadowColor = '#000000';
+        this.ctx.shadowBlur = 6;
+        this.ctx.shadowOffsetX = 2;
+        this.ctx.shadowOffsetY = 2;
+
+        // High Score display (bottom badge)
         this.ctx.fillStyle = '#ffffff';
-        this.ctx.font = '14px monospace';
-        this.ctx.fillText(`RECORD HIGHSCORE: ${this.highScore}`, 320, 310);
+        this.ctx.font = 'bold 16px monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`RECORD HIGHSCORE: ${this.highScore}`, 320, 330);
 
         // Press Start Flashing Text
         if (Math.sin(this.flashTimer * 3) > 0) {
-            this.ctx.fillStyle = '#00ffff';
-            this.ctx.font = 'bold 20px monospace';
-            this.ctx.fillText('PRESS START / TOQUE NA TELA', 320, 340);
+            this.ctx.fillStyle = '#ffff00';
+            this.ctx.font = 'bold 22px monospace';
+            this.ctx.fillText('PRESS START / TOQUE NA TELA', 320, 365);
         }
 
-        // Instructions Footer
-        this.ctx.fillStyle = '#a0b888';
-        this.ctx.font = '12px monospace';
-        this.ctx.fillText('PC: Setas / WASD + Espaço  |  Mobile: Controles Touch', 320, 365);
+        this.ctx.shadowColor = 'transparent';
+        this.ctx.shadowBlur = 0;
+        this.ctx.shadowOffsetX = 0;
+        this.ctx.shadowOffsetY = 0;
     }
 
     drawHUD() {
