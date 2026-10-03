@@ -18,9 +18,12 @@ class PitfallGame {
         this.lastTime = 0;
         this.flashTimer = 0;
 
-        // Custom Title Art Image
+        // Custom Title Art Image & Life Icon
         this.titleImg = new Image();
         this.titleImg.src = 'graphics/tela titulo.jpg';
+
+        this.lifeImg = new Image();
+        this.lifeImg.src = 'graphics/life.png';
 
         this.init();
     }
@@ -209,11 +212,20 @@ class PitfallGame {
         // Screen Number
         this.ctx.fillText(`TELA: ${this.screenMgr.currentScreenIndex + 1}/${this.screenMgr.totalScreens}`, 530, 30);
 
-        // Player Lives Icons (Miniature Player Idle Sprite from player_sheet.png)
+        // Player Lives Icons (graphics/life.png)
         for (let i = 0; i < this.lives; i++) {
-            const lx = 20 + i * 24;
-            const ly = 368;
-            if (this.player.spriteSheet.complete && this.player.spriteSheet.naturalWidth > 0) {
+            const lx = 20 + i * 26;
+            const ly = 364;
+            const iconW = 20;
+            const iconH = 26;
+
+            if (this.lifeImg.complete && this.lifeImg.naturalWidth > 0) {
+                this.ctx.save();
+                this.ctx.imageSmoothingEnabled = true;
+                this.ctx.imageSmoothingQuality = 'high';
+                this.ctx.drawImage(this.lifeImg, lx, ly, iconW, iconH);
+                this.ctx.restore();
+            } else if (this.player.spriteSheet.complete && this.player.spriteSheet.naturalWidth > 0) {
                 const sw = this.player.spriteSheet.naturalWidth / 7;
                 const sh = this.player.spriteSheet.naturalHeight;
                 this.ctx.drawImage(
