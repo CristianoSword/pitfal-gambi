@@ -20,7 +20,7 @@ class PitfallGame {
 
         // Custom Title Art Image
         this.titleImg = new Image();
-        this.titleImg.src = 'graphics/title_banner.png';
+        this.titleImg.src = 'graphics/tela titulo.jpg';
 
         this.init();
     }
@@ -168,11 +168,17 @@ class PitfallGame {
         this.ctx.fillText('PITFAL GAMBI', 320, 52);
         this.ctx.shadowBlur = 0;
 
-        // Custom Title Artwork (GAMBIARRAS hero emblem)
+        // Custom Title Artwork (tela titulo.jpg)
         if (this.titleImg.complete && this.titleImg.naturalWidth > 0) {
-            const artW = 270;
-            const artH = 235;
-            this.ctx.drawImage(this.titleImg, 320 - artW / 2, 60, artW, artH);
+            const artW = 290;
+            const artH = 218;
+            const artX = 320 - artW / 2;
+            const artY = 65;
+            
+            // Neat card border
+            this.ctx.fillStyle = '#4a6b22';
+            this.ctx.fillRect(artX - 4, artY - 4, artW + 8, artH + 8);
+            this.ctx.drawImage(this.titleImg, artX, artY, artW, artH);
         }
 
         // High Score display
