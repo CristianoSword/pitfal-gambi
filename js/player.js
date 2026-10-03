@@ -325,6 +325,12 @@ class Player {
                     drawX, drawY, drawW, drawH
                 );
             }
+
+            // Subtle CRT Scanline Interlace directly over player sprite
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+            for (let sy = drawY; sy < drawY + drawH; sy += 3) {
+                ctx.fillRect(drawX, sy, drawW, 1);
+            }
         } else {
             ctx.fillStyle = '#228b22';
             ctx.fillRect(this.x, this.y, this.width, this.height);
