@@ -1,14 +1,34 @@
-// Pitfall Harry Player Class with Physics, Animation & Custom Gambi 7-Frame Sprite Sheet
+// Pitfall Harry Player Class with Multi-Character Selection, Physics & Animation
 class Player {
     constructor() {
         this.width = 28;
         this.height = 48;
         
-        // Sprite sheet setup (7 frames total)
-        this.spriteSheet = new Image();
-        this.spriteSheet.src = 'graphics/player_sheet.png';
+        // 3 Characters setup: Gambi (1), Gambizinho (2), Dona Gambi (3)
+        this.characters = [
+            { id: 0, name: "GAMBI", src: "graphics/player_sheet.png", heightRatio: 1.0 },
+            { id: 1, name: "GAMBIZINHO", src: "graphics/player_sheet-2.png", heightRatio: 0.9 },
+            { id: 2, name: "DONA GAMBI", src: "graphics/player_sheet-3.png", heightRatio: 0.95 }
+        ];
+
+        this.characterSheets = this.characters.map(c => {
+            const img = new Image();
+            img.src = c.src;
+            return img;
+        });
+
+        this.selectedCharacter = 0;
+        this.spriteSheet = this.characterSheets[0];
+        this.vineCooldown = 0;
 
         this.reset();
+    }
+
+    setCharacter(index) {
+        if (index >= 0 && index < this.characters.length) {
+            this.selectedCharacter = index;
+            this.spriteSheet = this.characterSheets[index];
+        }
     }
 
     reset(x = 80, y = 182) {
@@ -25,11 +45,12 @@ class Player {
         this.isDying = false;
         this.deathTimer = 0;
         this.tripTimer = 0;
+        this.vineCooldown = 0;
 
         this.animFrame = 0;
         this.animTimer = 0;
 
-        // Constants adjusted for enlarged character height (48px)
+        // Constants adjusted for character height (48px)
         this.GROUND_Y = 182; // Ground level Y (230 - 48 height)
         this.UNDERGROUND_Y = 312; // Underground floor Y (360 - 48 height)
         this.SPEED = 3.2;
@@ -51,20 +72,35 @@ class Player {
             return;
         }
 
-        // 1. Vine Swinging Physics
+        if (this.vineCooldown > 0) {
+            this.vineCooldown--;
+        }
+
+        // 1. Vine Swinging Physics & Controlled Jump Release
         if (this.isSwinging) {
             const tip = hazardManager.getVineTipPos();
             this.x = tip.x - this.width / 2;
             this.y = tip.y;
 
-            // Release Vine on Jump or Up
+            // Release Vine on Jump
             if (input.keys.jump) {
                 this.isSwinging = false;
-                const vAngle = hazardManager.vine.angle;
-                const vVel = hazardManager.vine.angleVel;
-                this.vx = Math.cos(vAngle) * vVel * 120 + (input.keys.right ? 2 : (input.keys.left ? -2 : 0));
-                this.vy = this.JUMP_FORCE * 0.8;
+                this.vineCooldown = 25; // 25 frames debounce cooldown so player doesn't instantly regrab!
+                input.keys.jump = false; // Consume jump key to avoid immediate ground double-jump!
+
+                // Clean momentum release in swing direction without super-jump glitch
+                const swingDir = hazardManager.vine.angleVel >= 0 ? 1 : -1;
+                const hSpeed = Math.max(3.5, Math.min(Math.abs(hazardManager.vine.angleVel) * 80, 5.5));
+                this.vx = swingDir * hSpeed;
+                if (input.keys.right) this.vx = Math.max(this.vx, 4.0);
+                if (input.keys.left) this.vx = Math.min(this.vx, -4.0);
+
+                this.vy = -5.8; // Clean, natural jump height
+                this.isGround = false;
+                this.facing = this.vx >= 0 ? 'RIGHT' : 'LEFT';
+
                 if (window.soundFx) window.soundFx.playJump();
+                return;
             }
             return;
         }
@@ -127,6 +163,12 @@ class Player {
         this.x += this.vx;
         this.y += this.vy;
 
+        // Ceiling clamp so player never shoots above screen
+        if (this.y < 20) {
+            this.y = 20;
+            if (this.vy < 0) this.vy = 0;
+        }
+
         // 6. Underground Brick Wall Blocking
         if (this.isUnderground && hazardManager.undergroundWall) {
             if (this.x + this.width > 280 && this.x < 320) {
@@ -135,8 +177,8 @@ class Player {
             }
         }
 
-        // 7. Check Vine Collision / Grab
-        if (hazardManager.vine.active && !this.isSwinging && this.vy >= 0 && this.y < 230) {
+        // 7. Check Vine Collision / Grab (with vineCooldown exception check)
+        if (hazardManager.vine.active && !this.isSwinging && this.vineCooldown <= 0 && this.vy >= 0 && this.y < 230) {
             const tip = hazardManager.getVineTipPos();
             const dx = (this.x + this.width / 2) - tip.x;
             const dy = (this.y + 15) - tip.y;
@@ -279,7 +321,7 @@ class Player {
             }
         }
 
-        // Select sprite frame index from 7-frame player_sheet.png
+        // Select sprite frame index from 7-frame sprite sheet
         // 0: IDLE, 1..2: RUNNING, 3: JUMP/SWING, 4..5: CLIMB, 6: HURT
         let frameIdx = 0;
 
@@ -294,14 +336,7 @@ class Player {
             frameIdx = runFrames[Math.floor(this.animTimer) % 2]; // RUN 1 & 2
         }
 
-        // Increased size by +40% (drawW = 50px, drawH = 60px)
-        const drawW = 50;
-        const drawH = 60;
-        const drawX = Math.floor(this.x - (drawW - this.width) / 2);
-        const drawY = Math.floor(this.y - (drawH - this.height));
-
         if (this.spriteSheet.complete && this.spriteSheet.naturalWidth > 0) {
-            // Keep pixel-art crispness at original resolution
             ctx.imageSmoothingEnabled = false;
 
             const totalWidth = this.spriteSheet.naturalWidth;
@@ -309,6 +344,12 @@ class Player {
             const sw = totalWidth / 7;
             const sh = totalHeight;
             const sx = frameIdx * sw;
+
+            const heightRatio = (this.characters[this.selectedCharacter] && this.characters[this.selectedCharacter].heightRatio) || 1.0;
+            const drawH = Math.round(60 * heightRatio);
+            const drawW = Math.round(drawH * (sw / sh));
+            const drawX = Math.floor(this.x - (drawW - this.width) / 2);
+            const drawY = Math.floor(this.y - (drawH - this.height));
 
             if (this.facing === 'LEFT') {
                 ctx.translate(drawX + drawW, drawY);

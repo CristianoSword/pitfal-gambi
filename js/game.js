@@ -1,4 +1,4 @@
-// Main Pitfall! Game Loop & Title Screen Logic
+// Main Pitfall! Game Loop, Title Screen & Character Selection Logic
 class PitfallGame {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
@@ -9,7 +9,8 @@ class PitfallGame {
         this.hazardMgr = new HazardManager();
         this.player = new Player();
 
-        this.gameState = 'TITLE_SCREEN'; // 'TITLE_SCREEN', 'PLAYING', 'GAME_OVER', 'VICTORY'
+        this.gameState = 'TITLE_SCREEN'; // 'TITLE_SCREEN', 'CHAR_SELECT', 'PLAYING', 'GAME_OVER', 'VICTORY'
+        this.selectedCharIndex = 0; // 0: Gambi, 1: Gambizinho, 2: Dona Gambi
 
         this.score = 2000;
         this.highScore = parseInt(localStorage.getItem('pitfall_highscore') || '2000', 10);
@@ -18,12 +19,9 @@ class PitfallGame {
         this.lastTime = 0;
         this.flashTimer = 0;
 
-        // Custom Title Art Image & Life Icon
+        // Custom Title Art Image
         this.titleImg = new Image();
         this.titleImg.src = 'graphics/tela titulo.jpg';
-
-        this.lifeImg = new Image();
-        this.lifeImg.src = 'graphics/life.png';
 
         this.init();
     }
@@ -43,7 +41,7 @@ class PitfallGame {
         this.screenMgr.currentScreenIndex = 0;
         this.screenMgr.generateScreens();
         this.loadCurrentScreen();
-        this.player.reset(80, 194);
+        this.player.reset(80, 182);
         this.gameState = 'PLAYING';
 
         if (window.soundFx) window.soundFx.playStart();
@@ -85,7 +83,7 @@ class PitfallGame {
             this.gameState = 'GAME_OVER';
         } else {
             // Respawn player at top level start of screen
-            this.player.reset(80, 194);
+            this.player.reset(80, 182);
         }
     }
 
@@ -102,15 +100,71 @@ class PitfallGame {
     update(dt) {
         this.flashTimer += 0.05;
 
-        // Title Screen Input to start
-        if (this.gameState === 'TITLE_SCREEN' || this.gameState === 'GAME_OVER' || this.gameState === 'VICTORY') {
+        // 1. Title Screen: Press Start -> Character Selection Screen
+        if (this.gameState === 'TITLE_SCREEN') {
             if (this.input.consumeStart()) {
-                this.startNewGame();
+                this.gameState = 'CHAR_SELECT';
+                if (window.soundFx) window.soundFx.playStart();
             }
             return;
         }
 
-        // Game Timer Countdown
+        // 2. Character Selection Screen: Navigate, select & start
+        if (this.gameState === 'CHAR_SELECT') {
+            // D-Pad / Arrow keys navigation
+            const navDir = this.input.consumeNav();
+            if (navDir !== 0) {
+                this.selectedCharIndex = (this.selectedCharIndex + navDir + 3) % 3;
+                if (window.soundFx) window.soundFx.playJump();
+            }
+
+            // Click / Tap on character cards
+            const click = this.input.consumeClick();
+            if (click) {
+                // Card 0: X 50..215, Y 115..305
+                // Card 1: X 237..402, Y 115..305
+                // Card 2: X 425..590, Y 115..305
+                let clickedCard = -1;
+                if (click.y >= 115 && click.y <= 305) {
+                    if (click.x >= 50 && click.x <= 215) clickedCard = 0;
+                    else if (click.x >= 237 && click.x <= 402) clickedCard = 1;
+                    else if (click.x >= 425 && click.x <= 590) clickedCard = 2;
+                }
+
+                if (clickedCard !== -1) {
+                    if (this.selectedCharIndex === clickedCard) {
+                        // Confirm selected character and start!
+                        this.player.setCharacter(this.selectedCharIndex);
+                        this.startNewGame();
+                        return;
+                    } else {
+                        this.selectedCharIndex = clickedCard;
+                        if (window.soundFx) window.soundFx.playJump();
+                    }
+                }
+            }
+
+            // Confirm selection via Jump / Space / Enter or Touch Start
+            if (this.input.keys.jump || this.input.consumeStart()) {
+                this.input.keys.jump = false;
+                this.player.setCharacter(this.selectedCharIndex);
+                this.startNewGame();
+                return;
+            }
+            return;
+        }
+
+        // 3. Game Over & Victory restart
+        if (this.gameState === 'GAME_OVER' || this.gameState === 'VICTORY') {
+            if (this.input.consumeStart() || this.input.keys.jump) {
+                this.input.keys.jump = false;
+                this.gameState = 'CHAR_SELECT';
+                if (window.soundFx) window.soundFx.playStart();
+            }
+            return;
+        }
+
+        // 4. Playing State
         if (this.gameState === 'PLAYING') {
             this.timerSeconds -= dt;
             if (this.timerSeconds <= 0) {
@@ -135,6 +189,8 @@ class PitfallGame {
 
         if (this.gameState === 'TITLE_SCREEN') {
             this.drawTitleScreen();
+        } else if (this.gameState === 'CHAR_SELECT') {
+            this.drawCharSelectScreen();
         } else {
             // Render Game World
             this.screenMgr.drawEnvironment(this.ctx);
@@ -158,7 +214,6 @@ class PitfallGame {
             this.ctx.save();
             this.ctx.imageSmoothingEnabled = true;
             this.ctx.imageSmoothingQuality = 'high';
-            // Draw image filling canvas (640x400)
             this.ctx.drawImage(this.titleImg, 0, 0, 640, 400);
             this.ctx.restore();
         } else {
@@ -167,13 +222,13 @@ class PitfallGame {
             this.ctx.fillRect(0, 0, 640, 400);
         }
 
-        // Overlay Title Header Text if desired with dropshadow
+        // Overlay Text with Dropshadow
         this.ctx.shadowColor = '#000000';
         this.ctx.shadowBlur = 6;
         this.ctx.shadowOffsetX = 2;
         this.ctx.shadowOffsetY = 2;
 
-        // High Score display (bottom badge)
+        // High Score display
         this.ctx.fillStyle = '#ffffff';
         this.ctx.font = 'bold 16px monospace';
         this.ctx.textAlign = 'center';
@@ -190,6 +245,119 @@ class PitfallGame {
         this.ctx.shadowBlur = 0;
         this.ctx.shadowOffsetX = 0;
         this.ctx.shadowOffsetY = 0;
+    }
+
+    drawCharSelectScreen() {
+        // Dark Jungle Retro Background
+        this.ctx.fillStyle = '#091506';
+        this.ctx.fillRect(0, 0, 640, 400);
+
+        // Top & Bottom Border
+        this.ctx.fillStyle = '#2d6a1b';
+        this.ctx.fillRect(0, 0, 640, 20);
+        this.ctx.fillRect(0, 380, 640, 20);
+
+        // Header Title
+        this.ctx.shadowColor = '#000000';
+        this.ctx.shadowBlur = 8;
+        this.ctx.shadowOffsetX = 2;
+        this.ctx.shadowOffsetY = 2;
+
+        this.ctx.fillStyle = '#ffd700';
+        this.ctx.font = 'bold 28px monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('ESCOLHA SEU PERSONAGEM', 320, 56);
+
+        this.ctx.fillStyle = '#8cb868';
+        this.ctx.font = '13px monospace';
+        this.ctx.fillText('Use ◀ ▶ ou toque no personagem para escolher', 320, 84);
+
+        this.ctx.shadowBlur = 0;
+        this.ctx.shadowOffsetX = 0;
+        this.ctx.shadowOffsetY = 0;
+
+        // 3 Character Cards
+        const cardWidth = 165;
+        const cardHeight = 195;
+        const cardY = 108;
+        const cardXs = [50, 237, 425];
+
+        for (let i = 0; i < 3; i++) {
+            const cardX = cardXs[i];
+            const isSelected = (this.selectedCharIndex === i);
+            const charData = this.player.characters[i];
+            const sheet = this.player.characterSheets[i];
+
+            // Card Background
+            this.ctx.fillStyle = isSelected ? 'rgba(35, 60, 22, 0.95)' : 'rgba(15, 25, 10, 0.8)';
+            this.ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
+
+            // Card Border
+            if (isSelected) {
+                this.ctx.strokeStyle = '#ffd700';
+                this.ctx.lineWidth = 4;
+                this.ctx.strokeRect(cardX, cardY, cardWidth, cardHeight);
+
+                // Flashing selector badge
+                if (Math.sin(this.flashTimer * 4) > 0) {
+                    this.ctx.fillStyle = '#ffd700';
+                    this.ctx.font = 'bold 12px monospace';
+                    this.ctx.fillText('▶ SELECIONADO ◀', cardX + cardWidth / 2, cardY + cardHeight - 12);
+                } else {
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = 'bold 12px monospace';
+                    this.ctx.fillText('SELECIONADO', cardX + cardWidth / 2, cardY + cardHeight - 12);
+                }
+            } else {
+                this.ctx.strokeStyle = '#3a5820';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(cardX, cardY, cardWidth, cardHeight);
+
+                this.ctx.fillStyle = '#6b8e23';
+                this.ctx.font = '11px monospace';
+                this.ctx.fillText('TOQUE P/ ESCOLHER', cardX + cardWidth / 2, cardY + cardHeight - 12);
+            }
+
+            // Character Name Header in Card
+            this.ctx.fillStyle = isSelected ? '#ffffff' : '#a0b888';
+            this.ctx.font = 'bold 16px monospace';
+            this.ctx.fillText(charData.name, cardX + cardWidth / 2, cardY + 28);
+
+            // Character Frame 0 (Idle) Sprite
+            if (sheet && sheet.complete && sheet.naturalWidth > 0) {
+                this.ctx.save();
+                this.ctx.imageSmoothingEnabled = false; // Pixel-perfect crispness
+
+                const sw = sheet.naturalWidth / 7;
+                const sh = sheet.naturalHeight;
+                const aspect = sw / sh;
+
+                const spriteH = isSelected ? 92 : 82;
+                const spriteW = Math.round(spriteH * aspect);
+                const spriteX = cardX + (cardWidth - spriteW) / 2;
+                const spriteY = cardY + 42 + (96 - spriteH) / 2;
+
+                // Frame 0 (Idle)
+                this.ctx.drawImage(
+                    sheet,
+                    0, 0, sw, sh,
+                    spriteX, spriteY, spriteW, spriteH
+                );
+
+                this.ctx.restore();
+            }
+        }
+
+        // Start Prompt at bottom
+        if (Math.sin(this.flashTimer * 3) > 0) {
+            this.ctx.fillStyle = '#00ffff';
+            this.ctx.font = 'bold 18px monospace';
+            this.ctx.fillText('PRESSIONE PULAR / TOQUE PARA CONFIRMAR', 320, 335);
+        }
+
+        this.ctx.fillStyle = '#a0b888';
+        this.ctx.font = '12px monospace';
+        this.ctx.fillText('PC: Espaço / Enter  |  Mobile: Botão PULAR', 320, 362);
     }
 
     drawHUD() {
@@ -212,27 +380,24 @@ class PitfallGame {
         // Screen Number
         this.ctx.fillText(`TELA: ${this.screenMgr.currentScreenIndex + 1}/${this.screenMgr.totalScreens}`, 530, 30);
 
-        // Player Lives Icons (graphics/life.png)
+        // Player Lives Icons (Selected Character Frame 0 Idle Sprite)
         for (let i = 0; i < this.lives; i++) {
             const lx = 20 + i * 26;
             const ly = 364;
             const iconW = 20;
             const iconH = 26;
 
-            if (this.lifeImg.complete && this.lifeImg.naturalWidth > 0) {
+            if (this.player.spriteSheet.complete && this.player.spriteSheet.naturalWidth > 0) {
                 this.ctx.save();
-                this.ctx.imageSmoothingEnabled = true;
-                this.ctx.imageSmoothingQuality = 'high';
-                this.ctx.drawImage(this.lifeImg, lx, ly, iconW, iconH);
-                this.ctx.restore();
-            } else if (this.player.spriteSheet.complete && this.player.spriteSheet.naturalWidth > 0) {
+                this.ctx.imageSmoothingEnabled = false;
                 const sw = this.player.spriteSheet.naturalWidth / 7;
                 const sh = this.player.spriteSheet.naturalHeight;
                 this.ctx.drawImage(
                     this.player.spriteSheet,
                     0, 0, sw, sh,
-                    lx, ly, 18, 22
+                    lx, ly, iconW, iconH
                 );
+                this.ctx.restore();
             } else {
                 this.ctx.fillStyle = '#228b22';
                 this.ctx.fillRect(lx, ly + 6, 12, 14);

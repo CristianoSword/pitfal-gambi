@@ -9,6 +9,9 @@ class InputHandler {
         };
 
         this.startPressed = false;
+        this.navLeft = false;
+        this.navRight = false;
+        this.lastClick = null;
 
         this.initKeyboard();
         this.initTouch();
@@ -16,7 +19,7 @@ class InputHandler {
 
     initKeyboard() {
         window.addEventListener('keydown', (e) => {
-            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "KeyW", "KeyA", "KeyS", "KeyD"].includes(e.code)) {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "KeyW", "KeyA", "KeyS", "KeyD", "Enter"].includes(e.code)) {
                 e.preventDefault();
             }
 
@@ -26,10 +29,12 @@ class InputHandler {
             switch (e.code) {
                 case 'ArrowLeft':
                 case 'KeyA':
+                    if (!this.keys.left) this.navLeft = true;
                     this.keys.left = true;
                     break;
                 case 'ArrowRight':
                 case 'KeyD':
+                    if (!this.keys.right) this.navRight = true;
                     this.keys.right = true;
                     break;
                 case 'ArrowUp':
@@ -42,6 +47,7 @@ class InputHandler {
                     this.keys.down = true;
                     break;
                 case 'Space':
+                case 'Enter':
                     this.keys.jump = true;
                     break;
             }
@@ -67,6 +73,7 @@ class InputHandler {
                     this.keys.down = false;
                     break;
                 case 'Space':
+                case 'Enter':
                     this.keys.jump = false;
                     break;
             }
@@ -87,6 +94,8 @@ class InputHandler {
                     this.keys.jump = true;
                 } else {
                     this.keys[keyName] = true;
+                    if (keyName === 'left') this.navLeft = true;
+                    if (keyName === 'right') this.navRight = true;
                 }
             };
 
@@ -114,16 +123,31 @@ class InputHandler {
         attachTouch('btn-down', 'down');
         attachTouch('btn-jump', 'jump');
 
-        // Global canvas tap for starting game on mobile
+        // Global canvas tap for clicks and start on mobile/desktop
         const canvas = document.getElementById('gameCanvas');
         if (canvas) {
+            const handleCanvasClick = (clientX, clientY) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                this.lastClick = {
+                    x: (clientX - rect.left) * scaleX,
+                    y: (clientY - rect.top) * scaleY
+                };
+            };
+
             canvas.addEventListener('touchstart', (e) => {
                 this.startPressed = true;
                 if (window.soundFx) window.soundFx.init();
+                if (e.touches && e.touches[0]) {
+                    handleCanvasClick(e.touches[0].clientX, e.touches[0].clientY);
+                }
             }, { passive: true });
-            canvas.addEventListener('mousedown', () => {
+
+            canvas.addEventListener('mousedown', (e) => {
                 this.startPressed = true;
                 if (window.soundFx) window.soundFx.init();
+                handleCanvasClick(e.clientX, e.clientY);
             });
         }
     }
@@ -132,5 +156,23 @@ class InputHandler {
         const pressed = this.startPressed;
         this.startPressed = false;
         return pressed;
+    }
+
+    consumeNav() {
+        let dir = 0;
+        if (this.navLeft) {
+            dir = -1;
+            this.navLeft = false;
+        } else if (this.navRight) {
+            dir = 1;
+            this.navRight = false;
+        }
+        return dir;
+    }
+
+    consumeClick() {
+        const click = this.lastClick;
+        this.lastClick = null;
+        return click;
     }
 }
