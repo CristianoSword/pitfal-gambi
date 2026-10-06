@@ -11,6 +11,8 @@ class PitfallGame {
 
         this.gameState = 'TITLE_SCREEN'; // 'TITLE_SCREEN', 'CHAR_SELECT', 'PLAYING', 'GAME_OVER', 'VICTORY'
         this.selectedCharIndex = 0; // 0: Gambi, 1: Gambizinho, 2: Dona Gambi
+        this.charSelectCooldown = 0;
+        this.wasJumpHeld = false;
 
         this.score = 2000;
         this.highScore = parseInt(localStorage.getItem('pitfall_highscore') || '2000', 10);
@@ -104,6 +106,9 @@ class PitfallGame {
         if (this.gameState === 'TITLE_SCREEN') {
             if (this.input.consumeStart()) {
                 this.gameState = 'CHAR_SELECT';
+                this.input.keys.jump = false;
+                this.charSelectCooldown = 20;
+                this.wasJumpHeld = true;
                 if (window.soundFx) window.soundFx.playStart();
             }
             return;
@@ -111,6 +116,20 @@ class PitfallGame {
 
         // 2. Character Selection Screen: Navigate, select & start
         if (this.gameState === 'CHAR_SELECT') {
+            // Cooldown: drain inputs for 20 frames after entering to avoid immediate confirm
+            if (this.charSelectCooldown > 0) {
+                this.charSelectCooldown--;
+                this.input.consumeNav();
+                this.input.consumeStart();
+                this.input.keys.jump = false;
+                return;
+            }
+
+            // Track when jump is released so we require a fresh press
+            if (this.wasJumpHeld && !this.input.keys.jump) {
+                this.wasJumpHeld = false;
+            }
+
             // D-Pad / Arrow keys navigation
             const navDir = this.input.consumeNav();
             if (navDir !== 0) {
@@ -133,7 +152,6 @@ class PitfallGame {
 
                 if (clickedCard !== -1) {
                     if (this.selectedCharIndex === clickedCard) {
-                        // Confirm selected character and start!
                         this.player.setCharacter(this.selectedCharIndex);
                         this.startNewGame();
                         return;
@@ -144,9 +162,14 @@ class PitfallGame {
                 }
             }
 
-            // Confirm selection via Jump / Space / Enter or Touch Start
-            if (this.input.keys.jump || this.input.consumeStart()) {
+            // Confirm only on fresh jump/space/enter press (not held over from title)
+            if (!this.wasJumpHeld && this.input.keys.jump) {
                 this.input.keys.jump = false;
+                this.player.setCharacter(this.selectedCharIndex);
+                this.startNewGame();
+                return;
+            }
+            if (!this.wasJumpHeld && this.input.consumeStart()) {
                 this.player.setCharacter(this.selectedCharIndex);
                 this.startNewGame();
                 return;

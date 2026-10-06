@@ -46,6 +46,7 @@ class Player {
         this.deathTimer = 0;
         this.tripTimer = 0;
         this.vineCooldown = 0;
+        this.jumpWasHeld = false; // track if jump was held when vine was grabbed
 
         this.animFrame = 0;
         this.animTimer = 0;
@@ -82,20 +83,24 @@ class Player {
             this.x = tip.x - this.width / 2;
             this.y = tip.y;
 
-            // Release Vine on Jump
-            if (input.keys.jump) {
-                this.isSwinging = false;
-                this.vineCooldown = 25; // 25 frames debounce cooldown so player doesn't instantly regrab!
-                input.keys.jump = false; // Consume jump key to avoid immediate ground double-jump!
+            // Track jump release so we don't release immediately if player was holding jump when grabbed
+            if (this.jumpWasHeld && !input.keys.jump) {
+                this.jumpWasHeld = false;
+            }
 
-                // Clean momentum release in swing direction without super-jump glitch
+            // Release Vine only on a fresh jump press (not held from before grab)
+            if (!this.jumpWasHeld && input.keys.jump) {
+                this.isSwinging = false;
+                this.vineCooldown = 25;
+                input.keys.jump = false;
+
                 const swingDir = hazardManager.vine.angleVel >= 0 ? 1 : -1;
                 const hSpeed = Math.max(3.5, Math.min(Math.abs(hazardManager.vine.angleVel) * 80, 5.5));
                 this.vx = swingDir * hSpeed;
                 if (input.keys.right) this.vx = Math.max(this.vx, 4.0);
                 if (input.keys.left) this.vx = Math.min(this.vx, -4.0);
 
-                this.vy = -5.8; // Clean, natural jump height
+                this.vy = -5.8;
                 this.isGround = false;
                 this.facing = this.vx >= 0 ? 'RIGHT' : 'LEFT';
 
@@ -187,6 +192,8 @@ class Player {
                 this.isSwinging = true;
                 this.vy = 0;
                 this.vx = 0;
+                // If jump was held when grabbed, require release before vine jump
+                this.jumpWasHeld = input.keys.jump;
                 if (window.soundFx) window.soundFx.playSwing();
             }
         }

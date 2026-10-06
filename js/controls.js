@@ -23,7 +23,9 @@ class InputHandler {
                 e.preventDefault();
             }
 
-            this.startPressed = true;
+            if (["Space", "Enter"].includes(e.code)) {
+                this.startPressed = true;
+            }
             if (window.soundFx) window.soundFx.init();
 
             switch (e.code) {
@@ -87,7 +89,9 @@ class InputHandler {
 
             const handleStart = (e) => {
                 if (e.cancelable) e.preventDefault();
-                this.startPressed = true;
+                if (keyName === 'jump') {
+                    this.startPressed = true;
+                }
                 if (window.soundFx) window.soundFx.init();
                 btn.classList.add('active');
                 if (keyName === 'jump') {
