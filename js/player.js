@@ -162,7 +162,7 @@ class Player {
         }
 
         // 5. Gravity & Vertical Movement
-        if (!this.isGround && !this.isSinking) {
+        if (!this.isGround) {
             this.vy += this.GRAVITY;
         }
         this.x += this.vx;
@@ -203,7 +203,7 @@ class Player {
             this.x + this.width > hazardManager.pitBounds.left &&
             this.x < hazardManager.pitBounds.right);
 
-        if (inPitZone && this.y >= this.GROUND_Y && !this.isSwinging) {
+        if (inPitZone && this.y >= this.GROUND_Y && this.vy >= 0 && !this.isSwinging) {
             if (hazardManager.pitType === 'WATER') {
                 let landedOnCroc = false;
                 let hitCrocMouth = false;
@@ -233,14 +233,19 @@ class Player {
                     this.triggerDeath(game);
                 }
             } else if (hazardManager.pitType === 'QUICKSAND' || hazardManager.pitType === 'TAR') {
-                this.isSinking = true;
+                if (!this.isSinking) {
+                    this.isSinking = true;
+                    this.vy = 0;
+                    this.isGround = true;
+                }
                 this.y += 0.5;
                 if (this.y > 220) {
                     this.triggerDeath(game);
                 }
             }
         } else {
-            if (this.y >= currentTargetY) {
+            this.isSinking = false;
+            if (this.vy >= 0 && this.y >= currentTargetY) {
                 this.y = currentTargetY;
                 this.vy = 0;
                 this.isGround = true;
